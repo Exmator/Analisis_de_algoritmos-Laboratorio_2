@@ -19,6 +19,9 @@ def mat_mult(A):
     cost_bottom = bottom_up(A, 1, n - 1)
     end_bottom = time.perf_counter_ns()
 
+    # Secuencia de multiplicacion de minimo coste
+    secuencia = analisis_de_memoria(A)
+
     print('Tiempo de ejecución (nanosegundos):')
     print('Recursivo: ', (end_rec - init_rec))
     print('Memoizado: ', (end_memo - init_memo))
@@ -28,6 +31,9 @@ def mat_mult(A):
     print('Recursivo: ', cost_rec)
     print('Memoizado: ', cost_memo)
     print('Bottom-Up: ', cost_bottom)
+
+    print('Análisis de memoria :')
+    print('Secuencia: ', secuencia)
 # end def
 
 # ---------------------------------Algoritmo recursivo----------------------------------------
@@ -95,10 +101,42 @@ def bottom_up(d, i, j):
 # end def
 
 # --------------------------Algoritmo de análisis de memoria-----------------------------------
-def analisis_de_memoria():
-    # TODO: Implementar análisis de memoria
-    pass
+def analisis_de_memoria(d):
+    n = len(d) - 1  # número de matrices
+    m = [[0] * n for _ in range(n)]  # costos
+    s = [[0] * n for _ in range(n)]  # particiones
+
+    # Llena la tabla m
+    for l in range(2, n + 1): 
+        for i in range(n - l + 1):
+            j = i + l - 1
+            m[i][j] = float('inf')
+            for k in range(i, j):
+                q = m[i][k] + m[k + 1][j] + d[i] * d[k + 1] * d[j + 1]
+                if q < m[i][j]:
+                    m[i][j] = q
+                    s[i][j] = k
+                # end if
+            # end for
+        # end for
+    # end for
+
+    pasos = []
+    construir_secuencia(s, 0, n - 1, pasos)
+    return pasos
 # end def
+
+def construir_secuencia(s, i, j, pasos):
+    if i == j:
+        return (i + 1, j + 1)  
+    else:
+        k = s[i][j]
+        izquierda = construir_secuencia(s, i, k, pasos)
+        derecha = construir_secuencia(s, k + 1, j, pasos)
+        pasos.append((izquierda, derecha))
+        return (i + 1, j + 1)  # rango completo 
+# end def
+
 
 ## -------------------------------------------------------------------------
 if __name__ == "__main__":
