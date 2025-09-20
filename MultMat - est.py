@@ -3,17 +3,36 @@ import numpy as np
 import time
 
 def mat_mult(A):
-    init = time.perf_counter_ns()
     n = len(A)
-    
-    end = time.perf_counter_ns()
-    print(f' Total time is: {(end - init)}')
-    return 0
+    # Tiempos del algoritmo recursivo 
+    init_rec = time.perf_counter_ns()
+    cost_rec = mult_chain(A, 1, n - 1)
+    end_rec = time.perf_counter_ns()
+
+    # Tiempos del algoritmo memoizado
+    init_memo = time.perf_counter_ns()
+    cost_memo = memoizacion(A, 1, n - 1)
+    end_memo = time.perf_counter_ns()
+
+    # Tiempos del algoritmo bottom-up
+    init_bottom = time.perf_counter_ns()
+    cost_bottom = bottom_up(A, 1, n - 1)
+    end_bottom = time.perf_counter_ns()
+
+    print('Tiempo de ejecución (nanosegundos):')
+    print('Recursivo: ', (end_rec - init_rec))
+    print('Memoizado: ', (end_memo - init_memo))
+    print('Bottom-Up: ', (end_bottom - init_bottom))
+
+    print ('Coste mínimo (número de multiplicaciones):')
+    print('Recursivo: ', cost_rec)
+    print('Memoizado: ', cost_memo)
+    print('Bottom-Up: ', cost_bottom)
 # end def
 
+# ---------------------------------Algoritmo recursivo----------------------------------------
 # Complejidad O(2^n)
 def mult_chain(d, i, j):
-    print(f'Calling {i},{j}')
     if i == j:
         return 0
     else:
@@ -30,29 +49,66 @@ def mult_chain(d, i, j):
     # end if
 # end def
 
-def memoizacion():
-    # TODO: Implementar memoización
-    pass
+# ---------------------------------Algoritmo memoizado----------------------------------------
+def memoizacion(d, i, j):
+    M = {}
+    return aux_memoizacion(d, i, j, M)
 # end def
 
-def bottom_up():
-    # TODO: Implementar enfoque de abajo hacia arriba
-    pass
+def aux_memoizacion(d, i, j, M):
+    if (i, j) in M:
+        return M[(i, j)]
+    # end if
+    if i == j:
+        return 0
+    #end if
+    cost = float('inf')
+    for k in range(i, j):
+        cost_act = (aux_memoizacion(d, i, k, M) +
+                    aux_memoizacion(d, k + 1, j, M) +
+                    d[i - 1] * d[k] * d[j])
+        if cost_act < cost:
+            cost = cost_act
+        # end if
+    # end for
+    M[(i, j)] = cost
+    return cost
 # end def
 
+# ---------------------------------Algoritmo bottom-up-----------------------------------------
+def bottom_up(d, i, j):
+    n = j - i + 1 # Numero de matrices a multiplicar.
+    m = [[0] * n for _ in range(n)] # Se llena de ceros la matriz en los casos base
+    for l in range(2, n + 1):
+        for i in range(n - l + 1):
+            j = i + l - 1
+            m[i][j] = float('inf')
+            for k in range(i, j):
+                q = m[i][k] + m[k + 1][j] + d[i] * d[k + 1] * d[j + 1]
+                if q < m[i][j]:
+                    m[i][j] = q
+                # end if
+            # end for
+        # end for
+    # end for
+    return m[0][n - 1]
+# end def
+
+# --------------------------Algoritmo de análisis de memoria-----------------------------------
 def analisis_de_memoria():
     # TODO: Implementar análisis de memoria
     pass
 # end def
+
 ## -------------------------------------------------------------------------
-if len(sys.argv) < 2:
-    print("Usage: python3", sys.argv[0], "input_file")
-    sys.exit(1)
-# end if
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python3", sys.argv[0], "input_file")
+        sys.exit(1)
+    # end if
 
-Af = open(sys.argv[1], 'r').readlines()
-A = [int(a) for a in Af][0:]
+    Af = open(sys.argv[1], 'r').readlines()
+    A = [int(a) for a in Af][0:]
 
-print(A)
-print(mat_mult(A))
-
+    print(A)
+    mat_mult(A)
